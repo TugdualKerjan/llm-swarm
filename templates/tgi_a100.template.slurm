@@ -32,7 +32,7 @@ if [ -z "$HUGGING_FACE_HUB_TOKEN" ]; then
     export HUGGING_FACE_HUB_TOKEN=$(cat ~/.cache/huggingface/token)
 fi
 echo "Starting TGI container port $PORT"
-echo "http://$(hostname -I | awk '{print $1}'):$PORT" >> {{slurm_hosts_path}}
+echo "http://$(hostname -I | awk '{print $1}'):$PORT" >> {{hosts_path}}
 sudo docker run \
     -e HUGGING_FACE_HUB_TOKEN=$HF_TOKEN \
     --gpus "\"device=$CUDA_VISIBLE_DEVICES"\" \

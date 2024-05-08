@@ -1,0 +1,55 @@
+apiVersion: run.ai/v1
+kind: RunaiJob
+metadata:
+  name: {{job_name}} # MUST BE SAME NAME of the "release" label under spec>templace>label bellow in order to get logs into the Run:AI dashboard this is the job name
+  labels:
+    user: kerjan
+spec:
+  template:
+    metadata:
+      labels:
+        user: kerjan # User e.g. firstname.lastname
+        release: {{job_name}} # MUST BE SAME NAME of your pod "name" specify in the metadata above in order to get logs into the Run:AI dashboard
+    spec:
+      hostIPC: true
+      schedulerName: runai-scheduler
+      restartPolicy: Never
+      containers:
+      - name: phi3 #
+        image: ghcr.io/huggingface/text-generation-inference:2.0.2
+        # workingDir : /home/jwchen/work/code/AdsMT
+        # command: ["/bin/bash"]
+        args:
+        - "--model-id"
+        - "{{model}}"
+        - "--max-input-length"
+        - "{{model_input_length}}"
+        - "--max-total-tokens"
+        - "{{model_max_output}}"
+        - "--trust-remote-code"
+        - "--rope-factor=32"
+        - "--rope-scaling=dynamic"
+        env:
+          - name: HUGGING_FACE_HUB_TOKEN
+            value: {{HUGGING_FACE_HUB_TOKEN}}
+        ports:
+        - containerPort: 80
+          hostPort: {{port}}
+        resources:
+          limits:
+            nvidia.com/gpu: {{gpus}} # Fraction GPU is possible
+        volumeMounts:
+          - name: folder0
+            mountPath: /data
+          - name: dshm
+            mountPath: /dev/shm
+      volumes:
+        - name: folder0
+          # persistentVolumeClaim:
+          # claimName: runai-liac-maruland-scratch
+          nfs:
+            path: /home/kerjan/.cache/huggingface/hub
+            server: 128.178.38.25
+        - name: dshm
+          emptyDir:
+            medium: Memory # On the RCP

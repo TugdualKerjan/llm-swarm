@@ -32,7 +32,7 @@ if [ -z "$HUGGING_FACE_HUB_TOKEN" ]; then
     export HUGGING_FACE_HUB_TOKEN=$(cat ~/.cache/huggingface/token)
 fi
 echo "Starting TGI container port $PORT"
-echo "http://$(hostname -I | awk '{print $1}'):$PORT" >> {{slurm_hosts_path}}
+echo "http://$(hostname -I | awk '{print $1}'):$PORT" >> {{hosts_path}}
 # unset cache dirs to avoid pyxis having host env var somehow get into the container
 unset HF_HUB_CACHE HF_ASSETS_CACHE HF_DATASETS_CACHE HF_MODULES_CACHE
 srun --container-image='ghcr.io#huggingface/text-generation-inference' \
