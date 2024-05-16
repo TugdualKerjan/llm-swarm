@@ -1,9 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=llm-swarm
-#SBATCH --partition hopper-prod
-#SBATCH --gpus=8
-#SBATCH --cpus-per-task=12
-#SBATCH --mem-per-cpu=11G
+#SBATCH --partition gpu
+#SBATCH --gpus=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=1G
+#SBATCH --time=5
 #SBATCH -o slurm/logs/%x_%j.out
 
 # For HF cluster internal users: Check if /fsx directory exists
@@ -33,13 +34,16 @@ if [ -z "$HUGGING_FACE_HUB_TOKEN" ]; then
 fi
 echo "Starting TGI container port $PORT"
 echo "http://$(hostname -I | awk '{print $1}'):$PORT" >> {{hosts_path}}
-sudo docker run \
-    -e HUGGING_FACE_HUB_TOKEN=$HF_TOKEN \
-    --gpus "\"device=$CUDA_VISIBLE_DEVICES"\" \
-    --shm-size 1g \
-    -v $volume:/data -p $PORT:80 \
-    ghcr.io/huggingface/text-generation-inference \
+# unset cache dirs to avoid pyxis having host env var somehow get into the container
+unset HF_HUB_CACHE HF_ASSETS_CACHE HF_DATASETS_CACHE HF_MODULES_CACHE
+srun --container-image='ghcr.io#huggingface/text-generation-inference' \
+    --container-env=HUGGING_FACE_HUB_TOKEN,PORT \
+    --container-mounts="$volume:/data" \
+    --no-container-mount-home \
+    --qos normal \
+    /usr/local/bin/text-generation-launcher \
     --model-id $model \
+    --revision $revision \
     --max-concurrent-requests 2000 \
     --max-total-tokens {{model_max_length}} \
     --max-input-length {{model_input_length}} \

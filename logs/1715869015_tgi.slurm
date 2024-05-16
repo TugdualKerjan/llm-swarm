@@ -1,9 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=llm-swarm
-#SBATCH --partition hopper-prod
-#SBATCH --gpus={{gpus}}
-#SBATCH --cpus-per-task=12
-#SBATCH --mem-per-cpu=11G
+#SBATCH --partition gpu
+#SBATCH --gpus=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=1G
+#SBATCH --time=5
 #SBATCH -o slurm/logs/%x_%j.out
 
 # For HF cluster internal users: Check if /fsx directory exists
@@ -12,7 +13,7 @@ if [ -d "/fsx/.cache" ]; then
 else
     export volume=".cache"
 fi
-export model={{model}}
+export model=meta-llama/Meta-Llama-3-8B-Instruct
 export revision={{revision}}
 
 function unused_port() {
@@ -32,7 +33,7 @@ if [ -z "$HUGGING_FACE_HUB_TOKEN" ]; then
     export HUGGING_FACE_HUB_TOKEN=$(cat ~/.cache/huggingface/token)
 fi
 echo "Starting TGI container port $PORT"
-echo "http://$(hostname -I | awk '{print $1}'):$PORT" >> {{hosts_path}}
+echo "http://$(hostname -I | awk '{print $1}'):$PORT" >> logs/1715869015_host_tgi.txt
 # unset cache dirs to avoid pyxis having host env var somehow get into the container
 unset HF_HUB_CACHE HF_ASSETS_CACHE HF_DATASETS_CACHE HF_MODULES_CACHE
 srun --container-image='ghcr.io#huggingface/text-generation-inference' \
