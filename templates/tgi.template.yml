@@ -26,17 +26,6 @@ spec:
         - "{{model_input_tokens}}"
         - "--max-total-tokens"
         - "{{model_max_total}}"
-        - "--trust-remote-code"
-        - "--max-batch-total-tokens"
-        - "1000000"
-        - "--waiting-served-ratio"
-        - "0.001" # Was at 400 tokens per S per GPU with ratio set to 2 and with 0.5
-        - "--max-concurrent-requests"
-        - "{{max_concurrent_requests}}"
-        - "--max-waiting-tokens"
-        - "1000000"
-        - "--rope-factor=32"
-        - "--rope-scaling=dynamic"
 
         env:
           - name: HUGGING_FACE_HUB_TOKEN
