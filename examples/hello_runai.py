@@ -9,16 +9,17 @@ from tqdm.asyncio import tqdm_asyncio
 tasks = ["What is the capital of France?", "Who wrote Romeo and Juliet?", "What is the formula for water?"]
 with LLMSwarm(
     LLMSwarmConfig(
-        instances=2,
+        instances=1,
         inference_engine="tgi",
         job_scheduler="runai",
-        gpus=0.5,
-        logs_folder="logs",
-        template_path="templates/tgi_a100.template.yml",
+        gpus=1,
+        model="meta-llama/Meta-Llama-3-8B-Instruct",
+        template_path="templates/tgi.template.yml",
         load_balancer_template_path="templates/nginx.template.conf",
-        huggingface_token="",
-        model_max_total = 300,
-        model_max_input = 200,
+        huggingface_token="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",
+        model_max_total=3000,
+        model_max_input=1200,
+        per_instance_max_parallel_requests=300,
     )
 ) as llm_swarm:
     client = AsyncInferenceClient(model=llm_swarm.endpoint)

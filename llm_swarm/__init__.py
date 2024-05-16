@@ -9,6 +9,11 @@ from huggingface_hub import get_session
 
 class LLMSwarm:
     def __init__(self, config: LLMSwarmConfig) -> None:
+        """Initialize LLMSwarm with given configuration.
+        
+        Args:
+            config (LLMSwarmConfig): Configuration object for LLMSwarm.
+        """
         self.config = config
         self.scheduler = self._create_scheduler()
         self.cleaned_up = False
@@ -17,14 +22,20 @@ class LLMSwarm:
         self._handle_debug_endpoint()
 
     def _create_logs_folder(self):
+        """Create the logs folder if it doesn't already exist."""
         if not os.path.exists(self.config.logs_folder):
             os.makedirs(self.config.logs_folder)
 
     def _create_scheduler(self):
+        """Create and return the appropriate scheduler (SlurmScheduler or RunaiScheduler).
+        
+        Returns:
+            Union[SlurmScheduler, RunaiScheduler]: The created scheduler.
+        """
         return SlurmScheduler() if self.config.job_scheduler == "slurm" else RunaiScheduler()
 
     def _handle_debug_endpoint(self):
-        """Assign config attributes to local variables for clarity"""
+        """Handle the setup of the debug endpoint if provided in the configuration."""
         debug_endpoint = self.config.debug_endpoint
         inference_engine = self.config.inference_engine
         instances = self.config.instances
@@ -47,6 +58,7 @@ class LLMSwarm:
 
 
     def start(self):
+        """Start the job scheduling and wait for the endpoints to be reachable."""
         template = self.scheduler.read_job_template(self.config.template_path)
 
         job_timestamp, path, host_path, template = self.scheduler.generate_job_config(self.config, template)
@@ -65,7 +77,12 @@ class LLMSwarm:
         if self.config.inference_engine == "vllm":
             self.endpoint = f"{self.endpoint}/generate"
 
-    def _wait_for_jobs_to_start(self, job_ids: List[str]):
+    def _wait_for_jobs_to_start(self, job_ids: List[str]) -> None:
+        """Wait for the jobs to start and log their progress.
+        
+        Args:
+            job_ids (List[str]): List of job IDs to wait for.
+        """
         for job_id in job_ids:
             with Loader(f"Waiting for {job_id} to be created"):
                 while not self.scheduler.is_job_running(job_id):
@@ -75,6 +92,12 @@ class LLMSwarm:
             print(f"📖 {self.config.job_scheduler} log path: {log_path}")
 
     def _wait_for_endpoints_to_be_reachable(self, host_path: str, job_ids: List[str]) -> None:
+        """Wait for the endpoints to become reachable.
+        
+        Args:
+            host_path (str): The host path where endpoints will be listed.
+            job_ids (List[str]): List of job IDs to check the endpoints for.
+        """
         self.endpoints = self.scheduler.get_endpoints(host_path, self.config, self.config.instances, job_ids)
         for endpoint in self.endpoints:
             with Loader(f"Waiting for {endpoint} to be created"):
@@ -82,9 +105,12 @@ class LLMSwarm:
                     sleep(3)
 
     def _run_load_balancer(self, timestamp):
-        # run a load balancer
+        """Run the load balancer to distribute requests among multiple endpoints.
+        
+        Args:
+            timestamp: Timestamp for logging and job identification.
+        """      
         with open(self.config.load_balancer_template_path) as f:
-            # templates/nginx.template.conf
             load_balancer_template = f.read()
         servers = "\n".join([f"server {endpoint.replace('http://', '')};" for endpoint in self.endpoints])
         unused_port = get_unused_port()
@@ -124,16 +150,18 @@ class LLMSwarm:
         self.cleanup()
 
     def get_endpoints(self, endpoint_path: str, config: LLMSwarmConfig, instances: int = 1, job_ids: Optional[List[str]] = None) -> List[str]:
-        """Return list of endpoints from either a file or a comma separated string.
-        It also checks if the endpoints are reachable.
-
+        """Return list of endpoints from either a file or a comma-separated string.
+        
         Args:
-            endpoint_path (str): path to file containing endpoints or comma separated string
-            instances (int, optional): number of instances. Defaults to 1.
-
+            endpoint_path (str): Path to file containing endpoints or comma-separated string.
+            config (LLMSwarmConfig): Configuration object for LLMSwarm.
+            instances (int, optional): Number of instances. Defaults to 1.
+            job_ids (Optional[List[str]], optional): List of job IDs to check endpoints for. Defaults to None.
+        
         Returns:
-            List[str]: list of endpoints (e.g. ["http://26.0.154.245:13120"])
+            List[str]: List of endpoints (e.g., ["http://26.0.154.245:13120"]).
         """
+        
         endpoints = self.scheduler.get_endpoints(endpoint_path, config, instances, job_ids)
         for endpoint in endpoints:
             connected = False
