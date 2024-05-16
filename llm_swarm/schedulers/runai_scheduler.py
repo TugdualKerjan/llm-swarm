@@ -22,8 +22,9 @@ class RunaiScheduler(Scheduler):
         template = template.replace(r"{{model}}", config.model)
         template = template.replace(r"{{port}}", str(config.port))
         template = template.replace(r"{{gpus}}", str(config.gpus))
-        template = template.replace(r"{{model_max_output}}", str(config.model_max_total))
-        template = template.replace(r"{{model_input_length}}", str(config.model_max_input))
+        template = template.replace(r"{{model_max_total}}", str(config.model_max_total))
+        template = template.replace(r"{{model_max_input}}", str(config.model_max_input))
+        template = template.replace(r"{{max_concurrent_requests}}", str(config.per_instance_max_parallel_requests))
 
         return job_timestamp, path, "", template
 
@@ -44,15 +45,7 @@ class RunaiScheduler(Scheduler):
         try:
             # Execute the command and capture the output
             result = run_command(command)
-            # result = subprocess.run(command, shell=True, text=True, capture_output=True)
-            
-            # # Check for command execution errors
-            # if result.returncode != 0:
-            #     print(f"Error running command: {result.stderr.strip()}")
-            #     return False
 
-            # Parse the command's output
-            # lines = result.stdout.splitlines()
             lines = result.splitlines()
             for line in lines:
                 # Skip the header line
@@ -67,23 +60,21 @@ class RunaiScheduler(Scheduler):
                 # Check if the job name matches and the status is Running
                 if name == job_id and status == "Running":
                     return True
-            
-            return False
-
         except Exception as e:
-            print(f"Exception occurred: {str(e)}")
-            return False
+            print(e)
+
+        return False
 
     def make_sure_jobs_are_still_running(self, job_ids: List[str], log_path: str) -> None:
         if job_ids:
             for job_id in job_ids:
-                if self.is_job_running(self, job_id):
+                if not self.is_job_running(job_id):
                     print(f"\n❌ Failed! Job {job_id} is not running; Checkout the logs with $runai logs {job_id}")
                     raise RuntimeError(f"Job {job_id} is not running")
 
     def get_endpoints(self, host_path: str, config: LLMSwarmConfig, instances: int = 1, job_ids: Optional[List[str]] = None) -> List[str]:
         trying = True
-        with Loader(f"Waiting for {host_path} to be created"):
+        with Loader(f"Waiting for endpoints to be reachable"):
             while trying:
                 try:
                     endpoints = []
@@ -117,22 +108,13 @@ class RunaiScheduler(Scheduler):
                     print(e)
                     self.make_sure_jobs_are_still_running(job_ids, config)
                     sleep(1)
-        pass
+        return endpoints
 
     def check_if_endpoint_reachable(self, endpoint: str) -> bool:
         try:
-            headers = {
+            return requests.get(endpoint+"/health", {
                 "Content-Type": "application/json",
-            }
-            data = {
-                "inputs": "What is Deep Learning?",
-                "parameters": {
-                    "max_new_tokens": 200,
-                },
-            }
-            requests.post(endpoint, headers, json=data)
-            print(f"\nConnected to {endpoint}")
-            return True
+            }).status_code == 200
         except requests.exceptions.ConnectionError:
             return False
 

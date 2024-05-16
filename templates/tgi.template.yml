@@ -22,13 +22,22 @@ spec:
         args:
         - "--model-id"
         - "{{model}}"
-        - "--max-input-length"
-        - "{{model_input_length}}"
+        - "--max-input-tokens"
+        - "{{model_input_tokens}}"
         - "--max-total-tokens"
-        - "{{model_max_output}}"
+        - "{{model_max_total}}"
         - "--trust-remote-code"
+        - "--max-batch-total-tokens"
+        - "1000000"
+        - "--waiting-served-ratio"
+        - "0.001" # Was at 400 tokens per S per GPU with ratio set to 2 and with 0.5
+        - "--max-concurrent-requests"
+        - "{{max_concurrent_requests}}"
+        - "--max-waiting-tokens"
+        - "1000000"
         - "--rope-factor=32"
         - "--rope-scaling=dynamic"
+
         env:
           - name: HUGGING_FACE_HUB_TOKEN
             value: {{HUGGING_FACE_HUB_TOKEN}}
@@ -48,7 +57,7 @@ spec:
           # persistentVolumeClaim:
           # claimName: runai-liac-maruland-scratch
           nfs:
-            path: /home/kerjan/.cache/huggingface/hub
+            path: /data/kerjan/llms/hub
             server: 128.178.38.25
         - name: dshm
           emptyDir:

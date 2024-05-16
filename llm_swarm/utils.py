@@ -29,21 +29,8 @@ def get_unused_port(start=50000, end=65535):
             continue
     raise IOError("No free ports available in range {}-{}".format(start, end))
 
-def test_generation(endpoint):
-    headers = {
-        "Content-Type": "application/json",
-    }
-    data = {
-        "inputs": "What is Deep Learning?",
-        "parameters": {
-            "max_new_tokens": 200,
-        },
-    }
-    requests.post(endpoint, headers=headers, json=data)
-    print("✅ test generation")
-
 class Loader:
-    def __init__(self, desc="Loading...", end="✅ Done!", failed="❌ Aborted!", timeout=0.1):
+    def __init__(self, desc="Loading...", end="👌 Done!", failed="👎 Aborted!", timeout=0.2):
         """
         A loader-like context manager
         Modified from https://stackoverflow.com/a/66558182/6611317
@@ -60,7 +47,8 @@ class Loader:
         self.timeout = timeout
 
         self._thread = Thread(target=self._animate, daemon=True)
-        self.steps = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"]
+        # self.steps = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"]
+        self.steps = ["👉  👈", " 👉👈 "]
         self.done = False
 
     def start(self):
@@ -98,7 +86,7 @@ class Loader:
 
 DataclassT = TypeVar("DataclassT")
 
-@dataclass(frozen=True)
+@dataclass
 class LLMSwarmConfig:
     instances: int = 1
     inference_engine: Literal["tgi", "vllm"] = "tgi"
@@ -108,7 +96,7 @@ class LLMSwarmConfig:
     revision: str = "main"
     gpus: float = 0.4
     load_balancer_template_path: Optional[str] = "templates/nginx.template.conf"
-    per_instance_max_parallel_requests: int = 500
+    per_instance_max_parallel_requests: int = 128
     debug_endpoint: Optional[str] = None
     huggingface_token: Optional[str] = None
     model_max_input: int = 200

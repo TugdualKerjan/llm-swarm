@@ -16,14 +16,16 @@ class SlurmScheduler(Scheduler):
         job_timestamp = f"{int(time.time())}"
         path = os.path.join(config.logs_folder, f"{job_timestamp}_{config.inference_engine}.slurm")
         host_path = os.path.join(config.logs_folder, f"{job_timestamp}_host_{config.inference_engine}.txt")
+
          # Customize the template
         template = template.replace(r"{{HUGGING_FACE_HUB_TOKEN}}", config.huggingface_token or "")
         template = template.replace(r"{{hosts_path}}", host_path)
         template = template.replace(r"{{model}}", config.model)
         template = template.replace(r"{{port}}", str(config.port))
         template = template.replace(r"{{gpus}}", str(config.gpus))
-        template = template.replace(r"{{model_max_output}}", str(config.model_max_total))
-        template = template.replace(r"{{model_input_length}}", str(config.model_max_input))
+        template = template.replace(r"{{model_max_total}}", str(config.model_max_total))
+        template = template.replace(r"{{model_max_input}}", str(config.model_max_input))
+        template = template.replace(r"{{max_concurrent_requests}}", str(config.per_instance_max_parallel_requests))
         
         return job_timestamp, path, host_path, template
     

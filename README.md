@@ -1,16 +1,17 @@
 <div align="center">
-  <h1>🐝 llm-swarm</h1>
-  <p><em>Manage scalable open LLM inference endpoints in Slurm clusters</em></p>
+  <h1>🐝 llm-swarm 🦋</h1>
+  <p><em>Manage scalable open LLM inference endpoints in Runai and Slurm clusters</em></p>
 </div>
 
 ## Features
 
+- 😎 This fork implements the management for RunAI clusters as well. 😎
 - Generate synthetic datasets for pretraining or fine-tuning using either local LLMs or [Inference Endpoints](https://huggingface.co/inference-endpoints/dedicated) on the Hugging Face Hub.
 - Integrations with [huggingface/text-generation-inference](https://github.com/huggingface/text-generation-inference) and [vLLM](https://github.com/vllm-project/vllm) to generate text at scale.
 
 ## Prerequisites
 
-* A Slurm cluster with Docker support,
+* A Slurm or RunAI cluster with Docker support,
 * or access to [Inference Endpoints](https://huggingface.co/inference-endpoints/dedicated)
 
 
@@ -119,9 +120,9 @@ It does a couple of things:
 `llm_swarm` will create a slurm file in `./slurm` based on the default configuration (` --slurm_template_path=tgi_template.slurm`) and logs in `./slurm/logs` if you are interested to inspect.
 
 
-## Wait, I don't have a Slurm cluster?
+## Wait, I don't have a Slurm / RunAI cluster?
 
-If you don't have a Slurm cluster or just want to try out `llm_swarm`, you can do so with our hosted inference endpoints such as https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1. These endpoints come with usage limits though. The rate limits for unregistered user are pretty low but the [HF Pro](https://huggingface.co/pricing#pro) users have much higher rate limits. 
+If you don't have a Slurm / RunAI cluster or just want to try out `llm_swarm`, you can do so with our hosted inference endpoints such as https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1. These endpoints come with usage limits though. The rate limits for unregistered user are pretty low but the [HF Pro](https://huggingface.co/pricing#pro) users have much higher rate limits. 
 
 
 <a href="https://huggingface.co/pricing#pro"><img src="static/HF-Get a Pro Account-blue.svg"></a>

@@ -1,8 +1,6 @@
 import asyncio
 import json
 import pandas as pd
-import sys
-sys.path.append("/home/kerjan/ChemData/llm_swarm")
 from llm_swarm import LLMSwarm, LLMSwarmConfig
 from huggingface_hub import AsyncInferenceClient
 from transformers import AutoTokenizer
@@ -10,19 +8,21 @@ from tqdm.asyncio import tqdm_asyncio
 from datasets import load_dataset
 import time
 
+# Define your LLMSwarmConfig
 isc = LLMSwarmConfig(
-        instances=3,
-        inference_engine="tgi",
-        job_scheduler="runai",
-        gpus=1,
-        model="microsoft/Phi-3-mini-128k-instruct",
-        # model="meta-llama/Meta-Llama-3-8B-Instruct",
-        template_path="../templates/tgi_a100.template.yml",
-        load_balancer_template_path="../templates/nginx.template.conf",
-        huggingface_token="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",
-        model_max_total = 600,
-        model_max_input = 300,
-    )
+    instances=1,
+    inference_engine="tgi",
+    job_scheduler="runai",
+    gpus=1,
+    model="meta-llama/Meta-Llama-3-8B-Instruct",
+    template_path="llm_swarm/templates/tgi.template.yml",
+    load_balancer_template_path="llm_swarm/templates/nginx.template.conf",
+    huggingface_token="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",
+    model_max_total=3000,
+    model_max_input=1200,
+    per_instance_max_parallel_requests=300,
+)
+
 tokenizer = AutoTokenizer.from_pretrained(isc.model, revision=isc.revision)
 tasks = load_dataset("Anthropic/hh-rlhf", split="train")
 tasks = tasks.select(range(100))
